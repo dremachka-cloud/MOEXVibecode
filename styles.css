@@ -198,6 +198,9 @@ h1 {
     transition: transform 0.3s, box-shadow 0.3s;
     cursor: pointer;
     border-left: 4px solid var(--primary);
+    /* Touch-friendly */
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
 }
 
 .committee-card:hover {
@@ -649,6 +652,14 @@ h1 {
     padding: 15px;
     border-radius: 8px;
     margin-bottom: 10px;
+    cursor: pointer;
+    transition: background 0.3s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.member-committee-item:hover,
+.member-committee-item:active {
+    background: var(--bg-card);
 }
 
 .member-committee-item h4 {
@@ -668,6 +679,12 @@ h1 {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9em;
+}
+
+/* Table wrapper for horizontal scroll on mobile */
+#members-voting-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .members-table th,
@@ -753,20 +770,142 @@ footer a {
 
 /* Responsive */
 @media (max-width: 768px) {
+    /* Header */
     .header-content {
         flex-direction: column;
-        gap: 15px;
+        gap: 10px;
+        padding: 12px 15px;
+    }
+
+    .logo-text {
+        font-size: 20px;
     }
 
     nav {
         flex-wrap: wrap;
         justify-content: center;
+        width: 100%;
     }
 
+    nav a {
+        padding: 8px 12px;
+        font-size: 0.9em;
+    }
+
+    /* Main content */
+    main {
+        padding: 20px 15px;
+    }
+
+    /* Typography */
+    h1 {
+        font-size: 1.6em;
+    }
+
+    .subtitle {
+        font-size: 0.95em;
+    }
+
+    /* Welcome banner */
+    .welcome-banner {
+        padding: 25px 20px;
+    }
+
+    .welcome-banner h1 {
+        font-size: 1.5em;
+    }
+
+    .welcome-banner .subtitle {
+        font-size: 0.95em;
+    }
+
+    /* Committee groups */
     .committees-grid {
+        gap: 30px;
+    }
+
+    .group-title {
+        font-size: 1.3em;
+    }
+
+    .group-description {
+        margin-left: 0;
+        font-size: 0.9em;
+        padding-left: 35px;
+    }
+
+    .group-cards {
         grid-template-columns: 1fr;
     }
 
+    .committee-card {
+        padding: 20px;
+    }
+
+    .committee-card h3 {
+        font-size: 1.1em;
+    }
+
+    .committee-card p {
+        font-size: 0.9em;
+    }
+
+    /* Committee detail */
+    .committee-header {
+        padding: 20px;
+    }
+
+    .committee-header h2 {
+        font-size: 1.4em;
+    }
+
+    .committee-info {
+        grid-template-columns: 1fr;
+    }
+
+    .info-block {
+        padding: 12px;
+    }
+
+    /* Members */
+    .member-item {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px 0;
+    }
+
+    .member-name {
+        font-size: 0.95em;
+    }
+
+    .member-nickname {
+        font-size: 0.7em;
+        padding: 2px 8px;
+    }
+
+    .member-position {
+        font-size: 0.85em;
+        text-align: left;
+    }
+
+    /* Decisions */
+    .decision-item {
+        padding: 15px;
+    }
+
+    .decision-votes {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    .decision-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    /* Analytics */
     .analytics-grid {
         grid-template-columns: 1fr;
     }
@@ -775,11 +914,169 @@ footer a {
         grid-column: span 1;
     }
 
+    .analytics-card {
+        padding: 20px;
+    }
+
+    .stats-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    /* Members table */
+    #members-voting-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .members-table {
+        font-size: 0.8em;
+        min-width: 700px;
+    }
+
+    .members-table th,
+    .members-table td {
+        padding: 8px 6px;
+    }
+
+    .members-table td:first-child {
+        position: sticky;
+        left: 0;
+        background: var(--bg-card);
+        z-index: 1;
+    }
+
+    .members-table th:first-child {
+        position: sticky;
+        left: 0;
+        background: var(--bg-elevated);
+        z-index: 2;
+    }
+
+    .committee-badge {
+        font-size: 0.7em;
+        padding: 2px 6px;
+    }
+
+    .voting-bar {
+        min-width: 100px;
+    }
+
+    /* Member cards (participants page) */
+    .member-card {
+        padding: 20px;
+    }
+
+    .member-card h3 {
+        font-size: 1.1em;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .member-nickname-large {
+        font-size: 0.75em;
+        padding: 3px 10px;
+    }
+
+    .member-committee-item {
+        padding: 12px;
+    }
+
+    .voting-stats {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    /* Search */
     .search-box {
         flex-direction: column;
     }
 
+    .search-box input,
+    .search-box button {
+        padding: 12px 15px;
+        font-size: 0.95em;
+    }
+
     .search-filters {
         flex-direction: column;
+    }
+
+    .search-filters select {
+        width: 100%;
+    }
+
+    /* Buttons */
+    .official-link {
+        font-size: 0.85em;
+        padding: 6px 12px;
+    }
+
+    .back-btn {
+        font-size: 0.9em;
+    }
+
+    /* Nerd section */
+    .nerd-section,
+    .members-section,
+    .decisions-section {
+        padding: 20px;
+    }
+
+    .nerd-section h3,
+    .members-section h3,
+    .decisions-section h3 {
+        font-size: 1.1em;
+    }
+
+    .nerd-section p {
+        font-size: 0.9em;
+    }
+}
+
+/* Extra small devices (phones in portrait mode) */
+@media (max-width: 480px) {
+    .welcome-banner h1 {
+        font-size: 1.3em;
+    }
+
+    .welcome-banner .subtitle {
+        font-size: 0.85em;
+    }
+
+    .group-title {
+        font-size: 1.2em;
+    }
+
+    .group-emoji {
+        font-size: 1em;
+    }
+
+    .committee-card {
+        padding: 15px;
+    }
+
+    .committee-stats {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    h1 {
+        font-size: 1.4em;
+    }
+
+    .stat-value {
+        font-size: 2em;
+    }
+
+    .members-table {
+        font-size: 0.75em;
+    }
+
+    .member-nickname-large {
+        font-size: 0.7em;
     }
 }
