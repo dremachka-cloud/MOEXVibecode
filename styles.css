@@ -6,23 +6,24 @@
 }
 
 :root {
-    --primary: #1a237e;
-    --primary-light: #3949ab;
-    --secondary: #ff6f00;
-    --bg-light: #f5f5f5;
-    --bg-white: #ffffff;
-    --text-dark: #212121;
-    --text-gray: #757575;
-    --border: #e0e0e0;
-    --success: #4caf50;
-    --warning: #ff9800;
-    --danger: #f44336;
+    --primary: #5c6bc0;
+    --primary-light: #7986cb;
+    --secondary: #ff9100;
+    --bg-dark: #121212;
+    --bg-card: #1e1e1e;
+    --bg-elevated: #2a2a2a;
+    --text-light: #e0e0e0;
+    --text-gray: #b0b0b0;
+    --border: #333333;
+    --success: #66bb6a;
+    --warning: #ffa726;
+    --danger: #ef5350;
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: var(--bg-light);
-    color: var(--text-dark);
+    background: var(--bg-dark);
+    color: var(--text-light);
     line-height: 1.6;
 }
 
@@ -149,16 +150,51 @@ h1 {
 
 /* Committees grid */
 .committees-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+/* Committee groups */
+.committee-group {
+    margin-bottom: 20px;
+}
+
+.group-header {
+    margin-bottom: 20px;
+}
+
+.group-title {
+    color: var(--primary);
+    font-size: 1.6em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.group-emoji {
+    font-size: 1.2em;
+}
+
+.group-description {
+    color: var(--text-gray);
+    font-size: 1em;
+    margin-left: 50px;
+    font-style: italic;
+}
+
+.group-cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 20px;
 }
 
 .committee-card {
-    background: var(--bg-white);
+    background: var(--bg-card);
     border-radius: 10px;
     padding: 25px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     transition: transform 0.3s, box-shadow 0.3s;
     cursor: pointer;
     border-left: 4px solid var(--primary);
@@ -166,7 +202,8 @@ h1 {
 
 .committee-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 5px 20px rgba(91,107,192,0.3);
+    background: var(--bg-elevated);
 }
 
 .committee-card h3 {
@@ -215,11 +252,11 @@ h1 {
 }
 
 .committee-header {
-    background: var(--bg-white);
+    background: var(--bg-card);
     padding: 30px;
     border-radius: 10px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 .committee-header h2 {
@@ -257,7 +294,7 @@ h1 {
 }
 
 .info-block {
-    background: var(--bg-light);
+    background: var(--bg-elevated);
     padding: 15px;
     border-radius: 8px;
 }
@@ -273,17 +310,38 @@ h1 {
     font-size: 0.9em;
 }
 
-/* Members list */
-.members-section {
-    background: var(--bg-white);
+/* Nerd section */
+.nerd-section {
+    background: var(--bg-card);
     padding: 25px;
     border-radius: 10px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    border-left: 4px solid var(--secondary);
+}
+
+.nerd-section h3 {
+    color: var(--secondary);
+    margin-bottom: 15px;
+}
+
+.nerd-section p {
+    color: var(--text-gray);
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+/* Members list */
+.members-section {
+    background: var(--bg-card);
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 .members-section h3 {
-    color: var(--primary);
+    color: var(--primary-light);
     margin-bottom: 15px;
 }
 
@@ -300,6 +358,21 @@ h1 {
 
 .member-name {
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.member-nickname {
+    display: inline-block;
+    background: var(--secondary);
+    color: var(--bg-dark);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .member-position {
@@ -314,14 +387,14 @@ h1 {
 
 /* Decisions list */
 .decisions-section {
-    background: var(--bg-white);
+    background: var(--bg-card);
     padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 .decisions-section h3 {
-    color: var(--primary);
+    color: var(--primary-light);
     margin-bottom: 20px;
 }
 
@@ -330,11 +403,13 @@ h1 {
     border: 1px solid var(--border);
     border-radius: 8px;
     margin-bottom: 15px;
-    transition: border-color 0.3s;
+    background: var(--bg-elevated);
+    transition: border-color 0.3s, background 0.3s;
 }
 
 .decision-item:hover {
     border-color: var(--primary);
+    background: var(--bg-card);
 }
 
 .decision-date {
@@ -426,6 +501,8 @@ h1 {
     border: 2px solid var(--border);
     border-radius: 8px;
     font-size: 1em;
+    background: var(--bg-elevated);
+    color: var(--text-light);
     transition: border-color 0.3s;
 }
 
@@ -460,7 +537,8 @@ h1 {
     border: 1px solid var(--border);
     border-radius: 5px;
     font-size: 0.95em;
-    background: white;
+    background: var(--bg-elevated);
+    color: var(--text-light);
 }
 
 #search-results {
@@ -482,10 +560,10 @@ h1 {
 }
 
 .analytics-card {
-    background: var(--bg-white);
+    background: var(--bg-card);
     padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 .analytics-card.wide {
@@ -493,16 +571,16 @@ h1 {
 }
 
 .analytics-card h3 {
-    color: var(--primary);
+    color: var(--primary-light);
     margin-bottom: 20px;
     font-size: 1.1em;
 }
 
 .stats-summary {
-    background: var(--bg-white);
+    background: var(--bg-card);
     padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 .stats-row {
@@ -514,7 +592,7 @@ h1 {
 .stat-item {
     text-align: center;
     padding: 20px;
-    background: var(--bg-light);
+    background: var(--bg-elevated);
     border-radius: 8px;
 }
 
@@ -535,16 +613,31 @@ h1 {
 }
 
 .member-card {
-    background: var(--bg-white);
+    background: var(--bg-card);
     padding: 25px;
     border-radius: 10px;
     margin-bottom: 15px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 .member-card h3 {
-    color: var(--primary);
+    color: var(--primary-light);
     margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.member-nickname-large {
+    display: inline-block;
+    background: var(--secondary);
+    color: var(--bg-dark);
+    padding: 4px 14px;
+    border-radius: 15px;
+    font-size: 0.7em;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .member-committees {
@@ -552,7 +645,7 @@ h1 {
 }
 
 .member-committee-item {
-    background: var(--bg-light);
+    background: var(--bg-elevated);
     padding: 15px;
     border-radius: 8px;
     margin-bottom: 10px;
@@ -584,16 +677,22 @@ h1 {
     border-bottom: 1px solid var(--border);
 }
 
+.members-table td:nth-child(2) {
+    color: var(--secondary);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
 .members-table th {
-    background: var(--bg-light);
-    color: var(--primary);
+    background: var(--bg-elevated);
+    color: var(--primary-light);
     font-weight: 600;
     position: sticky;
     top: 0;
 }
 
 .members-table tr:hover {
-    background: var(--bg-light);
+    background: var(--bg-elevated);
 }
 
 .members-table .num {

@@ -39,29 +39,79 @@ function showPage(pageName) {
     window.scrollTo(0, 0);
 }
 
-// Отображение списка комитетов
+// Отображение списка комитетов с группировкой
 function renderCommittees() {
     const container = document.getElementById('committees-list');
-    container.innerHTML = committeesData.map(committee => `
-        <div class="committee-card" onclick="showCommittee('${committee.id}')">
-            <h3>${committee.name}</h3>
-            <p>${committee.short_description}</p>
-            <div class="committee-stats">
-                <span class="stat">
-                    <span class="stat-number">${committee.members.length}</span> участников
-                </span>
-                <span class="stat">
-                    <span class="stat-number">${committee.decisions.length}</span> решений
-                </span>
+
+    // Определяем группы комитетов
+    const groups = [
+        {
+            title: 'Базовые рынки',
+            emoji: '🎲',
+            description: 'Главное, что торгуется',
+            ids: ['a327', 'a341', 'a342']
+        },
+        {
+            title: 'Продвинутые штуки',
+            emoji: '🚀',
+            description: 'Для тех, кто въехал',
+            ids: ['a329', 'a2450', 'a308', 'a343']
+        },
+        {
+            title: 'Территория эмитентов',
+            emoji: '🏢',
+            description: 'Компании, которые на бирже',
+            ids: ['a1910', 'a2504', 'a304']
+        },
+        {
+            title: 'Админка биржи',
+            emoji: '👨‍💼',
+            description: 'Кто рулит',
+            ids: ['a331', 'a2435']
+        }
+    ];
+
+    // Генерируем HTML для каждой группы
+    container.innerHTML = groups.map(group => {
+        const groupCommittees = committeesData.filter(c => group.ids.includes(c.id));
+
+        return `
+            <div class="committee-group">
+                <div class="group-header">
+                    <h3 class="group-title">
+                        <span class="group-emoji">${group.emoji}</span>
+                        ${group.title}
+                    </h3>
+                    <p class="group-description">${group.description}</p>
+                </div>
+                <div class="group-cards">
+                    ${groupCommittees.map(committee => `
+                        <div class="committee-card" onclick="showCommittee('${committee.id}')">
+                            <h3>${committee.name}</h3>
+                            <p>${committee.short_description}</p>
+                            <div class="committee-stats">
+                                <span class="stat">
+                                    <span class="stat-number">${committee.members.length}</span> участников
+                                </span>
+                                <span class="stat">
+                                    <span class="stat-number">${committee.decisions.length}</span> решений
+                                </span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Показать детальную страницу комитета
 function showCommittee(id) {
     const committee = committeesData.find(c => c.id === id);
     if (!committee) return;
+
+    // Получаем всех участников со статистикой и прозвищами
+    const allMembersStats = getAllMembersWithStats();
 
     const container = document.getElementById('committee-detail');
     container.innerHTML = `
@@ -86,17 +136,30 @@ function showCommittee(id) {
             </div>
         </div>
 
+        <div class="nerd-section">
+            <h3>📚 Чувак, если ты реальный зануда</h3>
+            <p>Хочешь почитать все официальные правила и положения? Вот тебе ссылка на полный документ со всеми юридическими формулировками:</p>
+            <a href="${committee.regulation_url || committee.url}" target="_blank" class="official-link">📋 Положение о комитете (для зануд) →</a>
+        </div>
+
         <div class="members-section">
             <h3>Кто в команде?</h3>
-            ${committee.members.map(member => `
-                <div class="member-item">
-                    <div>
-                        <div class="member-name">${member.name}</div>
-                        <div class="member-company">${member.company}</div>
+            ${committee.members.map(member => {
+                const memberStats = allMembersStats[member.name];
+                const nickname = memberStats ? memberStats.nickname : '';
+                return `
+                    <div class="member-item">
+                        <div>
+                            <div class="member-name">
+                                ${member.name}
+                                ${nickname ? `<span class="member-nickname">${nickname}</span>` : ''}
+                            </div>
+                            <div class="member-company">${member.company}</div>
+                        </div>
+                        <div class="member-position">${member.position}</div>
                     </div>
-                    <div class="member-position">${member.position}</div>
-                </div>
-            `).join('')}
+                `;
+            }).join('')}
         </div>
 
         <div class="decisions-section">
@@ -340,6 +403,9 @@ function renderAnalytics() {
 
 // Участники
 function renderAllMembers() {
+    // Получаем всех участников со статистикой и прозвищами
+    const allMembersStats = getAllMembersWithStats();
+
     // Собираем всех уникальных участников с их комитетами
     const membersMap = {};
 
@@ -348,6 +414,7 @@ function renderAllMembers() {
             if (!membersMap[member.name]) {
                 membersMap[member.name] = {
                     name: member.name,
+                    nickname: allMembersStats[member.name]?.nickname || '',
                     committees: []
                 };
             }
@@ -376,7 +443,10 @@ function renderAllMembers() {
     const container = document.getElementById('members-list');
     container.innerHTML = members.map(member => `
         <div class="member-card">
-            <h3>${member.name}</h3>
+            <h3>
+                ${member.name}
+                ${member.nickname ? `<span class="member-nickname-large">${member.nickname}</span>` : ''}
+            </h3>
             <p>Тусит в ${member.committees.length} комитет${getCommitteeSuffix(member.committees.length)} — многозадачный чел!</p>
             <div class="member-committees">
                 ${member.committees.map(c => `
@@ -482,6 +552,127 @@ function renderSpeakersChart() {
     });
 }
 
+// Общая функция для получения всех участников со статистикой и прозвищами
+function getAllMembersWithStats() {
+    const memberStats = {};
+
+    // Собираем статистику по всем участникам
+    committeesData.forEach(committee => {
+        committee.members.forEach(member => {
+            if (!memberStats[member.name]) {
+                memberStats[member.name] = {
+                    name: member.name,
+                    committees: [],
+                    totalReports: 0,
+                    votesFor: 0,
+                    votesAgainst: 0,
+                    votesAbstain: 0
+                };
+            }
+
+            // Добавляем комитет если ещё нет
+            if (!memberStats[member.name].committees.includes(committee.name)) {
+                memberStats[member.name].committees.push(committee.name);
+            }
+        });
+
+        // Считаем голоса по докладам
+        committee.decisions.forEach(decision => {
+            if (memberStats[decision.speaker]) {
+                memberStats[decision.speaker].totalReports++;
+                memberStats[decision.speaker].votesFor += decision.votes_for;
+                memberStats[decision.speaker].votesAgainst += decision.votes_against;
+                memberStats[decision.speaker].votesAbstain += decision.votes_abstain;
+            }
+        });
+    });
+
+    const members = Object.values(memberStats);
+
+    // Добавляем прозвища
+    members.forEach(member => {
+        member.nickname = getNickname(member, members);
+    });
+
+    return memberStats;
+}
+
+// Функция для определения прозвища участника
+function getNickname(member, allMembers) {
+    const total = member.votesFor + member.votesAgainst + member.votesAbstain;
+
+    // Если нет докладов - пугливый зайчик
+    if (member.totalReports === 0) {
+        return 'Пугливый зайчик 🐰';
+    }
+
+    const forPct = total > 0 ? (member.votesFor / total * 100) : 0;
+    const againstPct = total > 0 ? (member.votesAgainst / total * 100) : 0;
+    const abstainPct = total > 0 ? (member.votesAbstain / total * 100) : 0;
+
+    const committeesCount = member.committees.length;
+    const reportsCount = member.totalReports;
+
+    // Определяем используемые прозвища для уникальности
+    const usedNicknames = allMembers
+        .filter(m => m.name !== member.name && m.nickname)
+        .map(m => m.nickname);
+
+    const nicknames = [];
+
+    // Критерии для прозвищ (в порядке приоритета)
+
+    // 1. Много "против" (больше 30%)
+    if (againstPct > 30) {
+        nicknames.push('Душнила 😤', 'Мистер НЕТ 🙅', 'Критик 🔍', 'Бунтарь 😈', 'Скептик 🤨', 'Возмутитель 🌪️');
+    }
+
+    // 2. Много "воздержался" (больше 20%)
+    else if (abstainPct > 20) {
+        nicknames.push('Боязливый 😰', 'Нерешительный 🤔', 'Сомневающийся 🤷', 'Дипломат ⚖️', 'Осторожный 🦥', 'Философ 🧘');
+    }
+
+    // 3. Почти все "за" (больше 95%)
+    else if (forPct > 95) {
+        nicknames.push('Соглашалка ✅', 'Позитивчик 👍', 'Оптимист 😊', 'Миротворец 🕊️', 'Конформист 😇', 'Да-Человек 🤗');
+    }
+
+    // 4. Много докладов (больше 5)
+    if (reportsCount > 5) {
+        nicknames.push('Говорун 🎤', 'Трудяга 💪', 'Активист 🚀', 'Работяга ⚡', 'Энерджайзер 🔋', 'Неугомонный 🏃');
+    }
+
+    // 5. В многих комитетах (больше 2)
+    if (committeesCount > 2) {
+        nicknames.push('Многостаночник 🎯', 'Везде сразу 🌟', 'Универсал 🦸', 'Многозадачник 🤹');
+    }
+
+    // 6. Высокий процент "за" но не экстремальный (80-95%)
+    if (forPct >= 80 && forPct <= 95) {
+        nicknames.push('Командный игрок 🤝', 'Надёжный 🛡️', 'Адекват 👌', 'Разумный 🧠');
+    }
+
+    // 7. Сбалансированное голосование (30-70% за)
+    if (forPct >= 30 && forPct < 80 && abstainPct < 20) {
+        nicknames.push('Взвешенный ⚖️', 'Рациональный 🧐', 'Объективный 🎭', 'Справедливый ⚔️');
+    }
+
+    // 8. Мало докладов (1-2)
+    if (reportsCount <= 2) {
+        nicknames.push('Новичок 🌱', 'Скромняга 😊', 'Тихоня 🤫', 'Наблюдатель 👀');
+    }
+
+    // Выбираем первое неиспользованное прозвище
+    for (const nickname of nicknames) {
+        if (!usedNicknames.includes(nickname)) {
+            return nickname;
+        }
+    }
+
+    // Если все прозвища заняты, берём первое из списка
+    return nicknames[0] || 'Участник 👤';
+}
+
 // Таблица голосования участников
 function renderMembersVotingTable() {
     const memberStats = {};
@@ -523,6 +714,11 @@ function renderMembersVotingTable() {
         return a.name.localeCompare(b.name);
     });
 
+    // Добавляем прозвища
+    members.forEach(member => {
+        member.nickname = getNickname(member, members);
+    });
+
     const container = document.getElementById('members-voting-table');
 
     container.innerHTML = `
@@ -530,6 +726,7 @@ function renderMembersVotingTable() {
             <thead>
                 <tr>
                     <th>Участник</th>
+                    <th>Прозвище</th>
                     <th>Комитеты</th>
                     <th class="num">Докладов</th>
                     <th class="num for">За</th>
@@ -548,6 +745,7 @@ function renderMembersVotingTable() {
                     return `
                         <tr>
                             <td><strong>${member.name}</strong></td>
+                            <td><span style="font-size: 1.1em;">${member.nickname || '—'}</span></td>
                             <td>
                                 ${member.committees.map(c =>
                                     `<span class="committee-badge">${c.replace('Комитет по ', '').replace('Комитет ', '').substring(0, 15)}...</span>`
