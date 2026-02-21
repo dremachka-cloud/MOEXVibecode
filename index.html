@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Комитеты MOEX - Аналитический портал</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <img src="https://www.moex.com/img/logo_moex.svg" alt="MOEX" onerror="this.style.display='none'">
+                <span class="logo-text">MOEX</span>
+            </div>
+            <nav>
+                <a href="#" data-page="home" class="active">Комитеты</a>
+                <a href="#" data-page="search">Поиск</a>
+                <a href="#" data-page="analytics">Аналитика</a>
+                <a href="#" data-page="members">Участники</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Главная страница - список комитетов -->
+        <section id="page-home" class="page active">
+            <div class="welcome-banner">
+                <h1>Йо, дружок! Давай разберёмся с биржей</h1>
+                <p class="subtitle">Тут мы простым языком объясняем, чем занимаются комитеты Московской биржи. Без душных терминов и занудства — только суть!</p>
+            </div>
+            <h2 class="section-title">Выбирай комитет и погнали</h2>
+            <div id="committees-list" class="committees-grid"></div>
+        </section>
+
+        <!-- Страница комитета -->
+        <section id="page-committee" class="page">
+            <button class="back-btn" onclick="showPage('home')">&larr; Назад к списку</button>
+            <div id="committee-detail"></div>
+        </section>
+
+        <!-- Поиск -->
+        <section id="page-search" class="page">
+            <h1>Ищем решения</h1>
+            <p class="subtitle">Забей ключевое слово и найди нужное решение за секунду</p>
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Что ищем? Например: акции, валюта, индекс...">
+                <button onclick="performSearch()">Го искать!</button>
+            </div>
+            <div class="search-filters">
+                <select id="filter-committee">
+                    <option value="">Все комитеты</option>
+                </select>
+                <select id="filter-year">
+                    <option value="">Все годы</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
+            </div>
+            <div id="search-results"></div>
+        </section>
+
+        <!-- Аналитика -->
+        <section id="page-analytics" class="page">
+            <h1>Цифры и графики</h1>
+            <p class="subtitle">Здесь всё по-взрослому: статистика, голосования, тренды. Кликай на графики — они интерактивные!</p>
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h3>Решения по комитетам</h3>
+                    <canvas id="chart-decisions"></canvas>
+                </div>
+                <div class="analytics-card">
+                    <h3>Голосование (за/против/воздержался)</h3>
+                    <canvas id="chart-votes"></canvas>
+                </div>
+                <div class="analytics-card wide">
+                    <h3>Динамика решений по месяцам</h3>
+                    <canvas id="chart-timeline"></canvas>
+                </div>
+                <div class="analytics-card wide">
+                    <h3>Голосование по докладчикам</h3>
+                    <canvas id="chart-speakers"></canvas>
+                </div>
+                <div class="analytics-card wide">
+                    <h3>Детальная статистика участников</h3>
+                    <div id="members-voting-table"></div>
+                </div>
+            </div>
+            <div class="stats-summary" id="stats-summary"></div>
+        </section>
+
+        <!-- Участники -->
+        <section id="page-members" class="page">
+            <h1>Кто все эти люди?</h1>
+            <p class="subtitle">Тут собраны все участники комитетов. Можешь найти любого по имени и посмотреть, в каких комитетах он тусит</p>
+            <div class="search-box">
+                <input type="text" id="member-search" placeholder="Введи имя или фамилию...">
+                <button onclick="searchMembers()">Найти человека</button>
+            </div>
+            <div id="members-list"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Данные собраны с официального сайта <a href="https://www.moex.com/s262" target="_blank">MOEX</a></p>
+        <p>Период: 2024-2025 | Аналитический проект</p>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
