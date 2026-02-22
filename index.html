@@ -16,6 +16,7 @@
             </div>
             <nav>
                 <a href="#" data-page="home" class="active">Комитеты</a>
+                <a href="#" data-page="calendar">Календарь</a>
                 <a href="#" data-page="search">Поиск</a>
                 <a href="#" data-page="analytics">Аналитика</a>
                 <a href="#" data-page="members">Участники</a>
@@ -38,6 +39,13 @@
         <section id="page-committee" class="page">
             <button class="back-btn" onclick="showPage('home')">&larr; Назад к списку</button>
             <div id="committee-detail"></div>
+        </section>
+
+        <!-- Календарь заседаний -->
+        <section id="page-calendar" class="page">
+            <h1>Календарь заседаний</h1>
+            <p class="subtitle">Когда собираются комитеты? Здесь все даты на 2026 год</p>
+            <div id="calendar-container"></div>
         </section>
 
         <!-- Поиск -->

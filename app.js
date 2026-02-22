@@ -35,6 +35,11 @@ function showPage(pageName) {
     // Показать нужную страницу
     document.getElementById('page-' + pageName).classList.add('active');
 
+    // Рендерим календарь при переходе на страницу календаря
+    if (pageName === 'calendar') {
+        renderCalendar();
+    }
+
     // Прокрутка наверх
     window.scrollTo(0, 0);
 }
@@ -113,6 +118,24 @@ function showCommittee(id) {
     // Получаем всех участников со статистикой и прозвищами
     const allMembersStats = getAllMembersWithStats();
 
+    // Находим ближайшую дату заседания
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let nextMeetingDateStr = null;
+    if (committee.meeting_dates && committee.meeting_dates.length > 0) {
+        const futureDates = committee.meeting_dates
+            .filter(dateStr => {
+                const date = new Date(dateStr + 'T00:00:00');
+                return date >= today;
+            })
+            .sort();
+
+        if (futureDates.length > 0) {
+            nextMeetingDateStr = futureDates[0];
+        }
+    }
+
     const container = document.getElementById('committee-detail');
     container.innerHTML = `
         <div class="committee-header">
@@ -122,24 +145,46 @@ function showCommittee(id) {
 
             <div class="committee-info">
                 <div class="info-block">
-                    <h4>Зачем они нужны?</h4>
+                    <h4>Цели</h4>
                     <p>${committee.goals}</p>
                 </div>
                 <div class="info-block">
-                    <h4>Чем занимаются?</h4>
+                    <h4>Задачи</h4>
                     <p>${committee.tasks}</p>
                 </div>
                 <div class="info-block">
-                    <h4>Что могут делать?</h4>
+                    <h4>Полномочия</h4>
                     <p>${committee.powers}</p>
                 </div>
+                ${nextMeetingDateStr ? `
+                <div class="info-block">
+                    <h4>Ближайшее заседание</h4>
+                    <p style="font-size: 1.2em; color: var(--primary); font-weight: 600;">
+                        📅 ${formatDate(nextMeetingDateStr)}
+                    </p>
+                </div>
+                ` : ''}
             </div>
         </div>
 
-        <div class="nerd-section">
-            <h3>📚 Чувак, если ты реальный зануда</h3>
-            <p>Хочешь почитать все официальные правила и положения? Вот тебе ссылка на полный документ со всеми юридическими формулировками:</p>
-            <a href="${committee.regulation_url || committee.url}" target="_blank" class="official-link">📋 Положение о комитете (для зануд) →</a>
+        <div class="decisions-section">
+            <h3>Что они решили? (короче, главное)</h3>
+            ${committee.decisions.map(decision => `
+                <div class="decision-item">
+                    <div class="decision-date">${formatDate(decision.date)}</div>
+                    <div class="decision-title">${decision.title}</div>
+                    <div class="decision-summary">${decision.summary}</div>
+                    <div class="decision-votes">
+                        <span>👍 За: ${decision.votes_for}</span>
+                        <span>👎 Против: ${decision.votes_against}</span>
+                        <span>🤷 Воздержался: ${decision.votes_abstain}</span>
+                    </div>
+                    <div class="decision-actions">
+                        <span style="color: var(--text-gray)">Докладчик: ${decision.speaker}</span>
+                        <a href="${decision.source_url}" target="_blank" class="official-link">📄 Смотреть на MOEX →</a>
+                    </div>
+                </div>
+            `).join('')}
         </div>
 
         <div class="members-section">
@@ -162,51 +207,173 @@ function showCommittee(id) {
             }).join('')}
         </div>
 
-        <div class="decisions-section">
-            <h3>Что они решили? (короче, главное)</h3>
-            ${committee.decisions.map(decision => `
-                <div class="decision-item">
-                    <div class="decision-date">${formatDate(decision.date)}</div>
-                    <div class="decision-title">${decision.title}</div>
-                    <div class="decision-summary">${decision.summary}</div>
-                    <div class="decision-votes">
-                        <span class="vote for">👍 За: ${decision.votes_for}</span>
-                        <span class="vote against">👎 Против: ${decision.votes_against}</span>
-                        <span class="vote abstain">🤷 Воздержался: ${decision.votes_abstain}</span>
-                    </div>
-                    <div class="decision-speaker">Кто докладывал: ${decision.speaker}</div>
-                    <a href="${decision.source_url || committee.url}" target="_blank" class="decision-link">📄 Смотреть на MOEX →</a>
-                </div>
-            `).join('')}
+        <div class="nerd-section">
+            <h3>📚 Чувак, если ты реальный зануда</h3>
+            <p>Хочешь почитать все официальные правила и положения? Вот тебе ссылка на полный документ со всеми юридическими формулировками:</p>
+            <a href="${committee.regulation_url || committee.url}" target="_blank" class="official-link">📋 Положение о комитете (для зануд) →</a>
         </div>
     `;
 
     showPage('committee');
 }
 
-// Форматирование даты
-function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return date.toLocaleDateString('ru-RU', options);
+// Календарь заседаний
+function renderCalendar() {
+    const container = document.getElementById('calendar-container');
+
+    // Собираем все заседания в единый массив
+    const allMeetings = [];
+    committeesData.forEach(committee => {
+        if (committee.meeting_dates && committee.meeting_dates.length > 0) {
+            committee.meeting_dates.forEach(date => {
+                allMeetings.push({
+                    date: date,
+                    committee: committee
+                });
+            });
+        }
+    });
+
+    // Создаём карту заседаний по датам для быстрого доступа
+    const meetingsByDate = {};
+    allMeetings.forEach(meeting => {
+        if (!meetingsByDate[meeting.date]) {
+            meetingsByDate[meeting.date] = [];
+        }
+        meetingsByDate[meeting.date].push(meeting);
+    });
+
+    // Группируем по месяцам
+    const monthGroups = {};
+    allMeetings.forEach(meeting => {
+        const date = new Date(meeting.date + 'T00:00:00');
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (!monthGroups[monthKey]) {
+            monthGroups[monthKey] = {
+                year: date.getFullYear(),
+                month: date.getMonth()
+            };
+        }
+    });
+
+    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                        'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+    const weekDaysShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт'];
+
+    if (!container) {
+        console.error('Calendar container not found');
+        return;
+    }
+
+    // Рендерим календарь для каждого месяца
+    const html = Object.keys(monthGroups).sort().map(monthKey => {
+        const group = monthGroups[monthKey];
+        const year = group.year;
+        const month = group.month;
+
+        // Получаем первый и последний день месяца
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+
+        // Получаем день недели первого дня (0 = вс, 1 = пн, ..., 6 = сб)
+        // Преобразуем к формату пн = 0, вт = 1, ..., пт = 4
+        let firstDayOfWeek = firstDay.getDay() - 1;
+        if (firstDayOfWeek === -1) firstDayOfWeek = 4; // Воскресенье => конец недели (после пятницы)
+        if (firstDayOfWeek > 4) firstDayOfWeek = 0; // Суббота => начало следующей недели
+
+        // Создаём массив дней
+        const days = [];
+
+        // Добавляем пустые ячейки для выравнивания
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            days.push({ empty: true });
+        }
+
+        // Добавляем все дни месяца (только будние дни)
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const dayOfWeek = date.getDay();
+
+            // Пропускаем субботу (6) и воскресенье (0)
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                continue;
+            }
+
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const meetings = meetingsByDate[dateStr] || [];
+            days.push({
+                day: day,
+                dateStr: dateStr,
+                meetings: meetings
+            });
+        }
+
+        return `
+            <div class="calendar-month">
+                <h2 class="month-title">${monthNames[month]} ${year}</h2>
+                <div class="calendar-grid">
+                    ${weekDaysShort.map(day => `<div class="calendar-weekday-header">${day}</div>`).join('')}
+                    ${days.map(dayData => {
+                        if (dayData.empty) {
+                            return `<div class="calendar-day calendar-day-empty"></div>`;
+                        }
+
+                        const hasMeetings = dayData.meetings.length > 0;
+
+                        return `
+                            <div class="calendar-day ${hasMeetings ? 'calendar-day-meeting' : ''}">
+                                <div class="calendar-day-number">${dayData.day}</div>
+                                ${hasMeetings ? `
+                                    <div class="calendar-day-meetings">
+                                        ${dayData.meetings.map(meeting => `
+                                            <div class="calendar-meeting-badge" onclick="showCommittee('${meeting.committee.id}')">
+                                                ${meeting.committee.name.replace('Комитет ', '')}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = html;
 }
 
-// Заполнение фильтров поиска
+// Форматирование даты
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString('ru', { month: 'long' });
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+}
+
+// Поиск
 function populateFilters() {
-    const select = document.getElementById('filter-committee');
+    const committeeFilter = document.getElementById('filter-committee');
     committeesData.forEach(committee => {
         const option = document.createElement('option');
         option.value = committee.id;
         option.textContent = committee.name;
-        select.appendChild(option);
+        committeeFilter.appendChild(option);
     });
 }
 
-// Поиск по решениям
 function performSearch() {
     const query = document.getElementById('search-input').value.toLowerCase();
     const committeeFilter = document.getElementById('filter-committee').value;
     const yearFilter = document.getElementById('filter-year').value;
+
+    if (!query.trim()) {
+        document.getElementById('search-results').innerHTML = '<p class="no-results">Введи запрос для поиска</p>';
+        return;
+    }
 
     const results = [];
 
@@ -214,86 +381,63 @@ function performSearch() {
         if (committeeFilter && committee.id !== committeeFilter) return;
 
         committee.decisions.forEach(decision => {
-            const year = decision.date.substring(0, 4);
-            if (yearFilter && year !== yearFilter) return;
+            if (yearFilter && !decision.date.startsWith(yearFilter)) return;
 
-            const searchText = (
-                decision.title + ' ' +
-                decision.summary + ' ' +
-                decision.speaker
-            ).toLowerCase();
-
-            if (!query || searchText.includes(query)) {
+            const searchText = `${decision.title} ${decision.summary} ${decision.full_text}`.toLowerCase();
+            if (searchText.includes(query)) {
                 results.push({
-                    committee: committee.name,
-                    committeeId: committee.id,
+                    committee: committee,
                     decision: decision
                 });
             }
         });
     });
 
-    renderSearchResults(results);
-}
-
-function renderSearchResults(results) {
     const container = document.getElementById('search-results');
 
     if (results.length === 0) {
-        container.innerHTML = '<div class="no-results">Упс, ничего не нашли. Попробуй другие слова!</div>';
+        container.innerHTML = '<p class="no-results">Ничего не найдено. Попробуй другой запрос</p>';
         return;
     }
 
-    container.innerHTML = results.map(result => {
-        const committee = committeesData.find(c => c.id === result.committeeId);
-        const sourceUrl = result.decision.source_url || (committee ? committee.url : 'https://www.moex.com/s262');
-        return `
-            <div class="decision-item">
-                <div class="decision-date">${formatDate(result.decision.date)} | ${result.committee}</div>
+    container.innerHTML = `
+        <h3>Найдено: ${results.length} ${getDecisionSuffix(results.length)}</h3>
+        ${results.map(result => `
+            <div class="decision-item" onclick="showCommittee('${result.committee.id}')">
+                <div class="decision-date">${formatDate(result.decision.date)}</div>
                 <div class="decision-title">${result.decision.title}</div>
                 <div class="decision-summary">${result.decision.summary}</div>
-                <div class="decision-votes">
-                    <span class="vote for">👍 За: ${result.decision.votes_for}</span>
-                    <span class="vote against">👎 Против: ${result.decision.votes_against}</span>
-                    <span class="vote abstain">🤷 Воздержался: ${result.decision.votes_abstain}</span>
-                </div>
-                <div class="decision-speaker">Кто докладывал: ${result.decision.speaker}</div>
-                <div class="decision-actions">
-                    <a href="${sourceUrl}" target="_blank" class="decision-link">📄 Смотреть на MOEX →</a>
-                    <span class="decision-link-secondary" onclick="showCommittee('${result.committeeId}')">Перейти в комитет</span>
-                </div>
+                <div style="margin-top: 10px; color: var(--primary);">Комитет: ${result.committee.name}</div>
             </div>
-        `;
-    }).join('');
+        `).join('')}
+    `;
 }
 
-// Автопоиск при вводе
-document.getElementById('search-input')?.addEventListener('keyup', (e) => {
-    if (e.key === 'Enter') {
-        performSearch();
-    }
-});
+function searchMembers() {
+    const query = document.getElementById('member-search').value.toLowerCase();
+    renderAllMembers(query);
+}
 
 // Аналитика
 function renderAnalytics() {
-    // Статистика по комитетам
-    const labels = committeesData.map(c => c.name.replace('Комитет по ', '').replace('Комитет ', ''));
-    const decisionCounts = committeesData.map(c => c.decisions.length);
+    // Решения по комитетам
+    const decisionsData = {
+        labels: committeesData.map(c => c.name.replace('Комитет ', '')),
+        datasets: [{
+            label: 'Количество решений',
+            data: committeesData.map(c => c.decisions.length),
+            backgroundColor: 'rgba(87, 94, 207, 0.8)',
+            borderColor: 'rgba(87, 94, 207, 1)',
+            borderWidth: 1
+        }]
+    };
 
-    // Диаграмма решений
     new Chart(document.getElementById('chart-decisions'), {
         type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Количество решений',
-                data: decisionCounts,
-                backgroundColor: '#3949ab',
-                borderRadius: 5
-            }]
-        },
+        data: decisionsData,
         options: {
             responsive: true,
+            maintainAspectRatio: true,
             plugins: {
                 legend: { display: false }
             },
@@ -319,18 +463,21 @@ function renderAnalytics() {
             labels: ['За', 'Против', 'Воздержался'],
             datasets: [{
                 data: [totalFor, totalAgainst, totalAbstain],
-                backgroundColor: ['#4caf50', '#f44336', '#ff9800']
+                backgroundColor: [
+                    'rgba(111, 184, 138, 0.8)',
+                    'rgba(212, 122, 122, 0.8)',
+                    'rgba(212, 165, 116, 0.8)'
+                ],
+                borderWidth: 0
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
+            maintainAspectRatio: true
         }
     });
 
-    // Временная шкала
+    // Динамика по месяцам
     const monthlyData = {};
     committeesData.forEach(c => {
         c.decisions.forEach(d => {
@@ -339,70 +486,123 @@ function renderAnalytics() {
         });
     });
 
-    const months = Object.keys(monthlyData).sort();
-    const monthCounts = months.map(m => monthlyData[m]);
+    const sortedMonths = Object.keys(monthlyData).sort();
 
     new Chart(document.getElementById('chart-timeline'), {
         type: 'line',
         data: {
-            labels: months.map(m => {
+            labels: sortedMonths.map(m => {
                 const [year, month] = m.split('-');
-                const monthNames = ['', 'Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
-                return `${monthNames[parseInt(month)]} ${year}`;
+                return `${month}.${year}`;
             }),
             datasets: [{
-                label: 'Решений',
-                data: monthCounts,
-                borderColor: '#3949ab',
-                backgroundColor: 'rgba(57, 73, 171, 0.1)',
-                fill: true,
-                tension: 0.4
+                label: 'Решений в месяц',
+                data: sortedMonths.map(m => monthlyData[m]),
+                borderColor: 'rgba(87, 94, 207, 1)',
+                backgroundColor: 'rgba(87, 94, 207, 0.1)',
+                tension: 0.4,
+                fill: true
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
+            maintainAspectRatio: true,
             scales: {
                 y: { beginAtZero: true }
             }
         }
     });
 
-    // Аналитика по докладчикам
-    renderSpeakersChart();
-    renderMembersVotingTable();
+    // Голосование по докладчикам
+    const speakerVotes = {};
+    committeesData.forEach(c => {
+        c.decisions.forEach(d => {
+            if (!speakerVotes[d.speaker]) {
+                speakerVotes[d.speaker] = { for: 0, against: 0, abstain: 0 };
+            }
+            speakerVotes[d.speaker].for += d.votes_for;
+            speakerVotes[d.speaker].against += d.votes_against;
+            speakerVotes[d.speaker].abstain += d.votes_abstain;
+        });
+    });
+
+    const speakers = Object.keys(speakerVotes).sort((a, b) => {
+        const totalA = speakerVotes[a].for + speakerVotes[a].against + speakerVotes[a].abstain;
+        const totalB = speakerVotes[b].for + speakerVotes[b].against + speakerVotes[b].abstain;
+        return totalB - totalA;
+    }).slice(0, 10);
+
+    new Chart(document.getElementById('chart-speakers'), {
+        type: 'bar',
+        data: {
+            labels: speakers.map(s => s.split(' ').slice(0, 2).join(' ')),
+            datasets: [
+                {
+                    label: 'За',
+                    data: speakers.map(s => speakerVotes[s].for),
+                    backgroundColor: 'rgba(111, 184, 138, 0.8)'
+                },
+                {
+                    label: 'Против',
+                    data: speakers.map(s => speakerVotes[s].against),
+                    backgroundColor: 'rgba(212, 122, 122, 0.8)'
+                },
+                {
+                    label: 'Воздержался',
+                    data: speakers.map(s => speakerVotes[s].abstain),
+                    backgroundColor: 'rgba(212, 165, 116, 0.8)'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true, beginAtZero: true }
+            }
+        }
+    });
 
     // Общая статистика
     const totalDecisions = committeesData.reduce((sum, c) => sum + c.decisions.length, 0);
-    const totalMembers = new Set(committeesData.flatMap(c => c.members.map(m => m.name))).size;
+    const unanimousDecisions = committeesData.reduce((sum, c) =>
+        sum + c.decisions.filter(d => d.votes_against === 0 && d.votes_abstain === 0).length, 0
+    );
+
+    const allMembers = new Set();
+    committeesData.forEach(c => {
+        c.members.forEach(m => allMembers.add(m.name));
+    });
 
     document.getElementById('stats-summary').innerHTML = `
-        <h3 style="color: var(--primary); margin-bottom: 20px;">Общая картина (TL;DR)</h3>
+        <h3>TL;DR Общая статистика</h3>
         <div class="stats-row">
             <div class="stat-item">
                 <div class="stat-value">${committeesData.length}</div>
-                <div class="stat-label">комитетов в игре</div>
+                <div class="stat-label">комитетов</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value">${totalDecisions}</div>
                 <div class="stat-label">решений принято</div>
             </div>
             <div class="stat-item">
-                <div class="stat-value">${totalMembers}</div>
-                <div class="stat-label">людей участвует</div>
+                <div class="stat-value">${allMembers.size}</div>
+                <div class="stat-label">уникальных участников</div>
             </div>
             <div class="stat-item">
-                <div class="stat-value">${Math.round(totalFor / (totalFor + totalAgainst + totalAbstain) * 100)}%</div>
+                <div class="stat-value">${Math.round(unanimousDecisions / totalDecisions * 100)}%</div>
                 <div class="stat-label">голосов "за" (почти всегда согласны)</div>
             </div>
         </div>
     `;
+
+    // Таблица участников с голосованием
+    renderMembersVotingTable();
 }
 
 // Участники
-function renderAllMembers() {
+function renderAllMembers(filterQuery = '') {
     // Получаем всех участников со статистикой и прозвищами
     const allMembersStats = getAllMembersWithStats();
 
@@ -423,15 +623,15 @@ function renderAllMembers() {
             const memberDecisions = committee.decisions.filter(d => d.speaker === member.name);
             const votesFor = memberDecisions.reduce((sum, d) => sum + d.votes_for, 0);
             const votesAgainst = memberDecisions.reduce((sum, d) => sum + d.votes_against, 0);
+            const votesAbstain = memberDecisions.reduce((sum, d) => sum + d.votes_abstain, 0);
 
             membersMap[member.name].committees.push({
-                name: committee.name,
                 id: committee.id,
+                name: committee.name,
                 position: member.position,
                 company: member.company,
                 reportsCount: memberDecisions.length,
-                votesFor: votesFor,
-                votesAgainst: votesAgainst
+                votesFor, votesAgainst, votesAbstain
             });
         });
     });
@@ -440,8 +640,13 @@ function renderAllMembers() {
         b.committees.length - a.committees.length
     );
 
+    // Фильтрация
+    const filteredMembers = filterQuery
+        ? members.filter(m => m.name.toLowerCase().includes(filterQuery))
+        : members;
+
     const container = document.getElementById('members-list');
-    container.innerHTML = members.map(member => `
+    container.innerHTML = filteredMembers.map(member => `
         <div class="member-card">
             <h3>
                 ${member.name}
@@ -455,10 +660,7 @@ function renderAllMembers() {
                         <div><strong>${c.position}</strong> | ${c.company}</div>
                         <div class="voting-stats">
                             <span>Докладов: ${c.reportsCount}</span>
-                            ${c.reportsCount > 0 ? `
-                                <span class="vote for">Поддержано: ${c.votesFor}</span>
-                                <span class="vote against">Против: ${c.votesAgainst}</span>
-                            ` : ''}
+                            ${c.reportsCount > 0 ? `<span>👍 ${c.votesFor}</span><span>👎 ${c.votesAgainst}</span><span>🤷 ${c.votesAbstain}</span>` : ''}
                         </div>
                     </div>
                 `).join('')}
@@ -467,89 +669,21 @@ function renderAllMembers() {
     `).join('');
 }
 
+// Вспомогательные функции
 function getCommitteeSuffix(count) {
     if (count === 1) return 'е';
     if (count >= 2 && count <= 4) return 'ах';
     return 'ах';
 }
 
-// Поиск по участникам
-function searchMembers() {
-    const query = document.getElementById('member-search').value.toLowerCase();
-    const cards = document.querySelectorAll('#members-list .member-card');
+function getDecisionSuffix(count) {
+    const lastDigit = count % 10;
+    const lastTwoDigits = count % 100;
 
-    cards.forEach(card => {
-        const name = card.querySelector('h3').textContent.toLowerCase();
-        if (name.includes(query)) {
-            card.style.display = 'block';
-        } else {
-            card.style.display = 'none';
-        }
-    });
-}
-
-// Автопоиск при вводе
-document.getElementById('member-search')?.addEventListener('keyup', searchMembers);
-
-// График голосования по докладчикам
-function renderSpeakersChart() {
-    const speakerStats = {};
-
-    committeesData.forEach(committee => {
-        committee.decisions.forEach(decision => {
-            const speaker = decision.speaker;
-            if (!speakerStats[speaker]) {
-                speakerStats[speaker] = {
-                    name: speaker,
-                    reports: 0,
-                    votesFor: 0,
-                    votesAgainst: 0,
-                    votesAbstain: 0
-                };
-            }
-            speakerStats[speaker].reports++;
-            speakerStats[speaker].votesFor += decision.votes_for;
-            speakerStats[speaker].votesAgainst += decision.votes_against;
-            speakerStats[speaker].votesAbstain += decision.votes_abstain;
-        });
-    });
-
-    const speakers = Object.values(speakerStats).sort((a, b) => b.reports - a.reports);
-    const labels = speakers.map(s => s.name.split(' ').slice(0, 2).join(' '));
-
-    new Chart(document.getElementById('chart-speakers'), {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'За',
-                    data: speakers.map(s => s.votesFor),
-                    backgroundColor: '#4caf50'
-                },
-                {
-                    label: 'Против',
-                    data: speakers.map(s => s.votesAgainst),
-                    backgroundColor: '#f44336'
-                },
-                {
-                    label: 'Воздержался',
-                    data: speakers.map(s => s.votesAbstain),
-                    backgroundColor: '#ff9800'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'top' }
-            },
-            scales: {
-                x: { stacked: true },
-                y: { stacked: true, beginAtZero: true }
-            }
-        }
-    });
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return 'решений';
+    if (lastDigit === 1) return 'решение';
+    if (lastDigit >= 2 && lastDigit <= 4) return 'решения';
+    return 'решений';
 }
 
 // Общая функция для получения всех участников со статистикой и прозвищами
@@ -613,38 +747,33 @@ function getNickname(member, allMembers) {
     const committeesCount = member.committees.length;
     const reportsCount = member.totalReports;
 
-    // Определяем используемые прозвища для уникальности
-    const usedNicknames = allMembers
-        .filter(m => m.name !== member.name && m.nickname)
-        .map(m => m.nickname);
-
+    // Собираем все возможные прозвища и выбираем первое неиспользованное
+    const usedNicknames = allMembers.map(m => m.nickname).filter(Boolean);
     const nicknames = [];
 
-    // Критерии для прозвищ (в порядке приоритета)
-
-    // 1. Много "против" (больше 30%)
-    if (againstPct > 30) {
-        nicknames.push('Душнила 😤', 'Мистер НЕТ 🙅', 'Критик 🔍', 'Бунтарь 😈', 'Скептик 🤨', 'Возмутитель 🌪️');
+    // 1. Много комитетов (>=3)
+    if (committeesCount >= 3) {
+        nicknames.push('Многостаночник 🎪', 'Везде успевает ⚡', 'Универсал 🌟', 'Активист 🔥');
     }
 
-    // 2. Много "воздержался" (больше 20%)
-    else if (abstainPct > 20) {
-        nicknames.push('Боязливый 😰', 'Нерешительный 🤔', 'Сомневающийся 🤷', 'Дипломат ⚖️', 'Осторожный 🦥', 'Философ 🧘');
+    // 2. Много докладов (>=5)
+    if (reportsCount >= 5) {
+        nicknames.push('Говорун 🗣️', 'Оратор 🎤', 'Трибун 📢', 'Лидер мнений 👑');
     }
 
-    // 3. Почти все "за" (больше 95%)
-    else if (forPct > 95) {
-        nicknames.push('Соглашалка ✅', 'Позитивчик 👍', 'Оптимист 😊', 'Миротворец 🕊️', 'Конформист 😇', 'Да-Человек 🤗');
+    // 3. Высокий процент "против" (>20%)
+    if (againstPct > 20) {
+        nicknames.push('Душнила 😤', 'Критик ⚠️', 'Скептик 🤨', 'Оппозиционер ✋');
     }
 
-    // 4. Много докладов (больше 5)
-    if (reportsCount > 5) {
-        nicknames.push('Говорун 🎤', 'Трудяга 💪', 'Активист 🚀', 'Работяга ⚡', 'Энерджайзер 🔋', 'Неугомонный 🏃');
+    // 4. Высокий процент воздержавшихся (>20%)
+    if (abstainPct > 20) {
+        nicknames.push('Боязливый 😰', 'Осторожный 🐌', 'Нерешительный 🤔', 'Сомневающийся 🧐');
     }
 
-    // 5. В многих комитетах (больше 2)
-    if (committeesCount > 2) {
-        nicknames.push('Многостаночник 🎯', 'Везде сразу 🌟', 'Универсал 🦸', 'Многозадачник 🤹');
+    // 5. Экстремально высокий процент "за" (>95%)
+    if (forPct > 95) {
+        nicknames.push('Соглашалка 👍', 'Позитивчик ✨', 'Оптимист 😊', 'Одобряющий 👌');
     }
 
     // 6. Высокий процент "за" но не экстремальный (80-95%)
@@ -747,15 +876,13 @@ function renderMembersVotingTable() {
                             <td><strong>${member.name}</strong></td>
                             <td><span style="font-size: 1.1em;">${member.nickname || '—'}</span></td>
                             <td>
-                                ${member.committees.map(c =>
-                                    `<span class="committee-badge">${c.replace('Комитет по ', '').replace('Комитет ', '').substring(0, 15)}...</span>`
-                                ).join('')}
+                                ${member.committees.map(c => `<span class="committee-badge">${c.replace('Комитет ', '').substring(0, 20)}</span>`).join(' ')}
                             </td>
                             <td class="num">${member.totalReports}</td>
                             <td class="num for">${member.votesFor}</td>
                             <td class="num against">${member.votesAgainst}</td>
                             <td class="num abstain">${member.votesAbstain}</td>
-                            <td class="bar-cell">
+                            <td>
                                 ${total > 0 ? `
                                     <div class="voting-bar">
                                         <div class="for-bar" style="width: ${forPct}%"></div>

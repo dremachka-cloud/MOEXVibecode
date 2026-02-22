@@ -6,27 +6,21 @@
 }
 
 :root {
-    /* Новая цветовая схема */
-    --primary: #5CDB95;           /* Яркий зеленый - основные элементы */
-    --primary-light: #8EE4AF;     /* Светлый мятный - акценты */
-    --primary-dark: #379683;      /* Темный зелено-бирюзовый - навигация, границы */
-    --secondary: #907163;         /* Коричневый - вторичные элементы */
-    --bg-dark: #1b1b1b;          /* Черный фон */
-    --bg-card: #252525;          /* Темно-серый для карточек */
-    --bg-elevated: #2f2f2f;      /* Еще светлее для поднятых элементов */
-    --text-light: #EDF5E1;       /* Светлый бежево-зеленый текст */
-    --text-gray: #c5c1b9;        /* Серый текст */
-    --text-muted: #8a8780;       /* Приглушенный текст */
-    --border: rgba(55, 150, 131, 0.2);  /* Границы с primary-dark */
-    --success: #8EE4AF;          /* Успех - светлый мятный */
-    --warning: #907163;          /* Предупреждение - коричневый */
-    --danger: #d47a7a;           /* Опасность - красный */
+    --primary: #575ECF;
+    --primary-light: #7982e0;
+    --secondary: #c5a572;
+    --bg-dark: #1b1b1b;
+    --bg-card: #252525;
+    --bg-elevated: #2f2f2f;
+    --text-light: #dcdad5;
+    --text-gray: #c5c1b9;
+    --text-muted: #8a8780;
+    --border: rgba(197, 193, 185, 0.1);
+    --success: #6fb88a;
+    --warning: #d4a574;
+    --danger: #d47a7a;
     --shadow: 0 0 0 1px rgba(0, 0, 0, 0.88), 0 1px 2px 0 rgba(0, 0, 0, 0.5);
     --shadow-elevated: 0 0 0 1px rgba(0, 0, 0, 0.88), 0 4px 8px 0 rgba(0, 0, 0, 0.6);
-
-    /* Для календаря */
-    --calendar-accent: #379683;   /* Темный зелено-бирюзовый для календаря */
-    --calendar-meeting: #5CDB95;  /* Яркий зеленый для дней с заседаниями */
 }
 
 body {
@@ -100,7 +94,7 @@ nav a:hover {
 
 nav a.active {
     color: var(--primary);
-    background: rgba(92, 219, 149, 0.15);
+    background: rgba(87, 94, 207, 0.1);
 }
 
 /* Main content */
@@ -235,7 +229,7 @@ h1 {
 .committee-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-elevated);
-    border-color: rgba(92, 219, 149, 0.3);
+    border-color: rgba(87, 94, 207, 0.3);
     background: var(--bg-elevated);
 }
 
@@ -317,8 +311,8 @@ h1 {
     text-decoration: none;
     font-weight: 500;
     padding: 8px 16px;
-    background: rgba(92, 219, 149, 0.12);
-    border: 1px solid rgba(55, 150, 131, 0.25);
+    background: rgba(87, 94, 207, 0.1);
+    border: 1px solid rgba(87, 94, 207, 0.2);
     border-radius: 6px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 14px;
@@ -326,7 +320,7 @@ h1 {
 
 .official-link:hover {
     background: rgba(87, 94, 207, 0.15);
-    border-color: rgba(55, 150, 131, 0.5);
+    border-color: rgba(87, 94, 207, 0.4);
     transform: translateY(-1px);
 }
 
@@ -465,7 +459,7 @@ h1 {
 }
 
 .decision-item:hover {
-    border-color: rgba(92, 219, 149, 0.3);
+    border-color: rgba(87, 94, 207, 0.3);
     background: var(--bg-card);
     transform: translateY(-1px);
 }
@@ -567,7 +561,7 @@ h1 {
 
 .search-box input:focus {
     outline: none;
-    border-color: rgba(55, 150, 131, 0.6);
+    border-color: rgba(87, 94, 207, 0.5);
     box-shadow: var(--shadow-elevated);
 }
 
@@ -616,7 +610,7 @@ h1 {
 
 .search-filters select:focus {
     outline: none;
-    border-color: rgba(55, 150, 131, 0.6);
+    border-color: rgba(87, 94, 207, 0.5);
 }
 
 #search-results {
@@ -705,7 +699,7 @@ h1 {
 }
 
 .member-card:hover {
-    border-color: rgba(55, 150, 131, 0.25);
+    border-color: rgba(87, 94, 207, 0.2);
 }
 
 .member-card h3 {
@@ -747,7 +741,7 @@ h1 {
 
 .member-committee-item:hover {
     background: var(--bg-card);
-    border-color: rgba(55, 150, 131, 0.25);
+    border-color: rgba(87, 94, 207, 0.2);
     transform: translateY(-1px);
 }
 
@@ -848,7 +842,7 @@ h1 {
     border-radius: 4px;
     font-size: 0.75em;
     margin: 2px;
-    border: 1px solid rgba(55, 150, 131, 0.25);
+    border: 1px solid rgba(87, 94, 207, 0.2);
     font-weight: 500;
 }
 
@@ -1200,8 +1194,6 @@ footer a:hover {
     color: var(--text-light);
     margin-bottom: 25px;
     font-weight: 700;
-    border-left: 4px solid var(--primary);
-    padding-left: 15px;
 }
 
 .meetings-timeline {
@@ -1225,7 +1217,7 @@ footer a:hover {
 .meeting-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-elevated);
-    border-color: rgba(92, 219, 149, 0.3);
+    border-color: rgba(87, 94, 207, 0.3);
     background: var(--bg-elevated);
 }
 
@@ -1293,10 +1285,10 @@ footer a:hover {
     font-weight: 600;
     color: var(--text-light);
     padding: 12px;
-    background: rgba(55, 150, 131, 0.15);
+    background: var(--bg-elevated);
     border-radius: 6px 6px 0 0;
     font-size: 0.9em;
-    border: 1px solid var(--calendar-accent);
+    border: 1px solid var(--border);
     border-bottom: none;
 }
 
@@ -1323,12 +1315,12 @@ footer a:hover {
 
 .calendar-day.today {
     border-color: var(--primary);
-    background: rgba(92, 219, 149, 0.08);
+    background: rgba(87, 94, 207, 0.05);
 }
 
 .calendar-day-meeting {
     background: var(--bg-elevated);
-    border-color: var(--calendar-accent);
+    border-color: rgba(87, 94, 207, 0.4);
 }
 
 .calendar-day.past {
@@ -1350,8 +1342,8 @@ footer a:hover {
 }
 
 .calendar-meeting-badge {
-    background: var(--calendar-meeting);
-    color: #1b1b1b;
+    background: var(--primary);
+    color: #fff;
     padding: 6px 8px;
     border-radius: 4px;
     font-size: 0.7em;
@@ -1364,7 +1356,7 @@ footer a:hover {
 }
 
 .calendar-meeting-badge:hover {
-    background: var(--primary-light);
+    background: rgba(87, 94, 207, 0.9);
     transform: scale(1.05);
 }
 
@@ -1400,12 +1392,12 @@ footer a:hover {
 
 .legend-box.today {
     border-color: var(--primary);
-    background: rgba(92, 219, 149, 0.06);
+    background: rgba(87, 94, 207, 0.05);
 }
 
 .legend-box.meeting {
     background: var(--bg-elevated);
-    border-color: rgba(92, 219, 149, 0.3);
+    border-color: rgba(87, 94, 207, 0.3);
 }
 
 .legend-box.past {
